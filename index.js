@@ -44,6 +44,38 @@ async function run() {
         res.send(result);
       });
 
+      //get all users
+      app.get('/users',verifyJWT,async(req,res)=>{
+        const users=await userCollection.find().toArray()
+        res.send(users)
+      })
+
+      //check admin
+      app.get('/admin/:email',async(req,res)=>{
+        const email=req.params.email
+        const user=await userCollection.findOne({email})
+        const isAdmin=user.role==='admin'
+        res.send({admin:isAdmin})
+      })
+
+      //added admin role
+      app.put('/user/admin/:email',verifyJWT,async(req,res)=>{
+        const email=req.params.email
+        const requester=req.decoded.email
+        const requesterAccount=await userCollection.findOne({email:requester})
+        if(requesterAccount.role){
+          const query = { email };
+          const updateDoc = {
+            $set: { role: "admin" },
+          };
+          const result = await userCollection.updateOne(query, updateDoc);
+          res.send(result);
+        }else{
+          return res.status(403).send({ message: "forbidden access" });
+        }
+        
+      })
+        //when user sign in and login then get a token
       app.put('/user/:email',async(req,res)=>{
         const email=req.params.email
         const user=req.body
@@ -71,7 +103,7 @@ async function run() {
           const bookings = await bookingCollection.find(query).toArray();
           return res.send(bookings);
         }else{
-          return res.status(403).send({ message: "forbidden access" });
+          return res.status(403).send({ message: "forbidden access" })
         }
       })
 
