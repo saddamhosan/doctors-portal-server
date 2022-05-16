@@ -37,9 +37,10 @@ async function run() {
       const serviceCollection = client.db("doctors").collection("services");
       const bookingCollection = client.db("doctors").collection("booking");
       const userCollection = client.db("doctors").collection("users");
+      const doctorCollection = client.db("doctors").collection("doctors");
       app.get("/service", async (req, res) => {
         const query = {};
-        const cursor = serviceCollection.find(query);
+        const cursor = serviceCollection.find(query).project({name:1})
         const result = await cursor.toArray();
         res.send(result);
       });
@@ -146,6 +147,13 @@ async function run() {
         });
         res.send(services);
       });
+
+      //insert a doctor
+      app.post('/doctor', async(req,res)=>{
+        const doctor=req.body
+        const result=await doctorCollection.insertOne(doctor)
+        res.send(result)
+      })
     } finally {
     // await client.close();
   }
