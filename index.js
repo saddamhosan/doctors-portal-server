@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
 const port = process.env.PORT || 4000;
 
@@ -38,9 +38,10 @@ async function run() {
     const userCollection = client.db("doctors").collection("users");
     const doctorCollection = client.db("doctors").collection("doctors");
 
-    const verifyAdmin = (req, res, next) => {
+    const verifyAdmin =async (req, res, next) => {
       const decodedEmail = req.decoded.email;
-      const requesterAccount = userCollection.findOne({ email: decodedEmail });
+      console.log(decodedEmail);
+      const requesterAccount = await userCollection.findOne({ email: decodedEmail });
       if (requesterAccount.role === "admin") {
         next();
       } else {
@@ -151,6 +152,21 @@ async function run() {
       const result = await doctorCollection.insertOne(doctor);
       res.send(result);
     });
+
+    //get all doctors
+    app.get('/doctors', async(req,res)=>{
+      const doctors=await doctorCollection.find().toArray()
+      res.send(doctors)
+    })
+
+    //delete a doctor
+    app.delete('/doctor/:id',async(req,res)=>{
+      const id=req.params.id
+      const query={_id:ObjectId(id)}
+      console.log(query);
+      const result=await doctorCollection.deleteOne(query)
+      res.send(result)
+    })
   } finally {
     // await client.close();
   }
