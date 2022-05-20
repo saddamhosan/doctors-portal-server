@@ -37,8 +37,7 @@ const email = {
   <h3>Your appointment for ${treatment} is Confirmed</h3>
   <p>Looking forward to seeing you  on ${date} at ${slot}.</p>
 
-
-  <p>Our address</p>
+  <h4>Our address</h4>
   <p>Kolatoli, Cox's bazar</p>
   <p>Bangladesh</p>
   <a href="https://www.youtube.com/?&ab_channel=jrcodjmix">unsubscribe</a>
