@@ -3,6 +3,8 @@ const cors = require("cors");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+var nodemailer = require("nodemailer");
+var sgTransport = require("nodemailer-sendgrid-transport");
 const app = express();
 const port = process.env.PORT || 4000;
 
@@ -15,6 +17,42 @@ const client = new MongoClient(uri, {
   useUnifiedTopology: true,
   serverApi: ServerApiVersion.v1,
 });
+
+const emailSenderOptions = {
+  auth: {
+    api_key: process.env.EMAIL_SENDER_KEY,
+  },
+};
+var emailClient = nodemailer.createTransport(sgTransport(emailSenderOptions));
+
+function sendAppointmentEmail(booked){
+  const { treatment, date, slot, patentName, patentEmail } = booked;
+const email = {
+  from: process.env.EMAIL_SENDER,
+  to: patentEmail,
+  subject: `Your appointment for ${treatment} is on ${date} at ${slot} Confirmed`,
+  text: `Your appointment for ${treatment} is on ${date} at ${slot} Confirmed`,
+  html: `<div>
+  <p>Hello ${patentName}</p>
+  <h3>Your appointment for ${treatment} is Confirmed</h3>
+  <p>Looking forward to seeing you  on ${date} at ${slot}.</p>
+
+
+  <p>Our address</p>
+  <p>Kolatoli, Cox's bazar</p>
+  <p>Bangladesh</p>
+  <a href="https://www.youtube.com/?&ab_channel=jrcodjmix">unsubscribe</a>
+  </div>`,
+};
+
+emailClient.sendMail(email, function (err, info) {
+  if (err) {
+    console.log(err);
+  } else {
+    console.log("Message sent: " , info);
+  }
+});
+}
 
 function verifyJWT(req, res, next) {
   const authHeaders = req.headers.authorization;
@@ -120,6 +158,7 @@ async function run() {
         return res.send({ success: false, exists });
       }
       const result = await bookingCollection.insertOne(booked);
+      sendAppointmentEmail(booked)
       return res.send({ success: true, result });
     });
     //heroku link:https://infinite-oasis-14663.herokuapp.com/available
